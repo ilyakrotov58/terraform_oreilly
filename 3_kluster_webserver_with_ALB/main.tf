@@ -2,6 +2,19 @@ provider "aws" {
     region = "us-east-2"
 }
 
+# Bucket for saving state
+# Located in 4_S3_bucket
+terraform {
+    backend "s3" {
+        bucket = "terraform-s3-bucket-ilia-example"
+        key = "global/s3/terraform.tfstate"
+        region = "us-east-2"
+
+        dynamodb_table = "terraform_s3_ilia_example-locks"
+        encrypt = true
+    }
+}
+
 # Resource for creating an Auto Scaling Group (ASG) in AWS.
 # This group automatically manages the scaling of EC2 instances
 # based on the defined parameters

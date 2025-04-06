@@ -7,7 +7,7 @@ provider "aws" {
 terraform {
     backend "s3" {
         bucket = "terraform-s3-bucket-ilia-example"
-        key = "global/s3/terraform.tfstate"
+        key = "stage/services/webserver-cluster/terraform.tfstate"
         region = "us-east-2"
 
         dynamodb_table = "terraform_s3_ilia_example-locks"
@@ -45,12 +45,12 @@ resource "aws_launch_template" "example" {
     instance_type = "t2.micro"
     vpc_security_group_ids = [aws_security_group.instance.id]
 
-    user_data = base64encode(<<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p ${var.server_port} &
-              EOF
-    )
+    user_data = base64encode(templatefile("user-data.sh",
+    {
+        server_port = var.server_port
+        db_adress = data.terraform_remote_state.db.outputs.adress
+        db_port = data.terraform_remote_state.db.outputs.port
+    }))
 
     # Ensures a new launch configuration is created before the old one is destroyed, 
     # since ASG keep a reference to the existing configuration
@@ -157,6 +157,17 @@ resource "aws_security_group" "alb" {
     }
 }
 
+# Reading state of the db from the bucket
+data "terraform_remote_state" "db" {
+    backend = "s3"
+
+    config = {
+        bucket = "terraform-s3-bucket-ilia-example"
+        key = "stage/data-stores/mysql/terraform.tfstate"
+        region = "us-east-2"
+    }
+}
+
 data "aws_vpc" "default" {
     default = true
 }
@@ -166,15 +177,4 @@ data "aws_subnets" "default" {
         name = "vpc-id"
         values = [data.aws_vpc.default.id]
     }
-}
-
-variable "server_port" {
-    description = "Port for HTTP requests"
-    type = number
-    default = 8080
-}
-
-output "alb_dns_name" {
-    value = aws_lb.example.dns_name
-    description = "App load balancer domain name"
 }

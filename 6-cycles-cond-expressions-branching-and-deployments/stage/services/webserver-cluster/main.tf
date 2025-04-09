@@ -24,6 +24,9 @@ module "webserver_cluster" {
     enable_autoscaling = false
 
     aws_lb_target_group_name = "aws-lb-target-group-stage"
+
+    ami = "ami-0fb653ca2d3203ac1"
+    server_text = "Hello, World!!"
 }
 
 resource "aws_security_group_rule" "allow_testing_inbound" {

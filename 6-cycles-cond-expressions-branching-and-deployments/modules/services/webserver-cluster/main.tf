@@ -2,16 +2,39 @@
 # This group automatically manages the scaling of EC2 instances
 # based on the defined parameters
 resource "aws_autoscaling_group" "example" {
-    vpc_zone_identifier = data.aws_subnets.default.ids
 
+    # Here we are creating explicit dependency from the name of the launch_configuration
+    # We need this so that the ASG is replaced along with the configuration
+    name = "${var.cluster_name}-${aws_launch_template.example.name}"
+
+    vpc_zone_identifier = data.aws_subnets.default.ids
     target_group_arns = [aws_lb_target_group.asg.arn]
     health_check_type = "ELB"
 
     min_size = var.min_size
     max_size = var.max_size
 
+    # Making sure that min num of instances will be ready before ending deployment of the ASG
+    min_elb_capacity = var.min_size
+
+    # But also, instead of changing name, adding lifecycle and min_elb_capacity, we can just add this code:
+    # 
+    # instance_refresh {
+    #     strategy = "Rolling"
+    #     preferences {
+    #         min_healthy_percentage = 50
+    #     }
+    # }
+
+    # Ensures a new launch configuration is created before the old one is destroyed, 
+    # since ASG keep a reference to the existing configuration
+    lifecycle {
+        create_before_destroy = true
+    }
+
     launch_template {
         id = aws_launch_template.example.id
+        version = "$Latest"
     }
 
     tag {
@@ -67,7 +90,8 @@ resource "aws_autoscaling_schedule" "scale_in_at_night" {
 # Launch templates define configuration details for EC2 instances,
 # including AMI, instance type, security groups, and startup scripts
 resource "aws_launch_template" "example" {
-    image_id = "ami-0fb653ca2d3203ac1"
+    
+    image_id = var.ami
     instance_type = var.instance_type
     vpc_security_group_ids = [aws_security_group.instance.id]
 
@@ -76,6 +100,7 @@ resource "aws_launch_template" "example" {
         server_port = var.server_port
         db_adress = data.terraform_remote_state.db.outputs.adress
         db_port = data.terraform_remote_state.db.outputs.port
+        server_text = var.server_text
     }))
 
     # Ensures a new launch configuration is created before the old one is destroyed, 

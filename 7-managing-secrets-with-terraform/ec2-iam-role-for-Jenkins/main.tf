@@ -6,7 +6,7 @@
 
 
 provider "aws" {
-  region = "us-east-2"  # или какой у тебя стоит
+  region = "us-east-2"
 }
 
 # Create an EC2 instance with an attached IAM Instance Profile

@@ -16,6 +16,14 @@ resource "aws_autoscaling_group" "example" {
         }
     }
 
+    lifecycle {
+        # Validation after we executed terraform apply
+        postcondition {
+            condition = length(self.availability_zones) > 1
+            error_message = "You must use more than one AZ for high availability"
+        }
+    }
+
     launch_template {
         id = aws_launch_template.example.id
         version = "$Latest"
@@ -74,6 +82,13 @@ resource "aws_launch_template" "example" {
 
     lifecycle {
         create_before_destroy = true
+
+        # Validation before apply
+        # Same as in validation in variables, but we do not tied down to hardcoded values
+        precondition {
+            condition = data.aws_ec2_instance_type.instance.free_tier_eligible
+            error_message = "${var.instance_type} is not part of the AWS Free Tier"
+        }
     }
 }
 

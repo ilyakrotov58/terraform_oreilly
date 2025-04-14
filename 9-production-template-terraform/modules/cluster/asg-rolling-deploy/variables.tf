@@ -22,6 +22,16 @@ variable "instance_type" {
 variable "min_size" {
     description = "Minimum number of EC2 instances in the ASG"
     type = number
+
+    validation {
+        condition = var.min_size > 0
+        error_message = "ASGs can't be empty"
+    }
+
+    validation {
+        condition = var.min_size <= 10
+        error_message = "ASG must have 10 or fewer instances to keep costs down"
+    }
 }
 
 variable "max_size" {

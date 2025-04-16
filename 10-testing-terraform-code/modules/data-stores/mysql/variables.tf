@@ -12,14 +12,7 @@ variable "db_password" {
     default = null
 }
 
-variable "backup_retention_preiod" {
-    description = "Days to retain backups. Must be > 0 to enable replication"
-    type = number
-    default = null
-}
-
-variable "replicate_source_db" {
-    description = "If specified, replicate the RDS database at the given ARN"
+variable "db_name" {
+    description = "Name of the Database"
     type = string
-    default = null
 }

@@ -8,20 +8,12 @@ terraform {
 }
 
 resource "aws_db_instance" "example" {
-    identifier_prefix = "terraform-example-db-ilia"
-    engine = var.replicate_source_db == null ? "mysql" : null
-    allocated_storage = 10
-    instance_class = "db.t3.micro"
-    skip_final_snapshot = true
-    db_name = var.replicate_source_db == null ? "example_database_ilia_stage" : null
-
-    # Enable backup
-    backup_retention_period = var.backup_retention_preiod
-
-    # If this var is not null, that means DB is replica
-    replicate_source_db = var.replicate_source_db
-
-    # Just for the learning purpuses - real examples in 7-managing-secrets-with-terraform
-    username = var.replicate_source_db == null ? var.db_username : null
-    password = var.replicate_source_db == null ? var.db_password : null
+  identifier_prefix   = "terraform-up-and-running"
+  engine              = "mysql"
+  allocated_storage   = 10
+  instance_class      = "db.t3.micro"
+  db_name             = var.db_name
+  username            = var.db_username
+  password            = var.db_password
+  skip_final_snapshot = true
 }
